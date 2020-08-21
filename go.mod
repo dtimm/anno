@@ -5,7 +5,10 @@ go 1.13
 require (
 	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
 	github.com/google/go-cmp v0.4.0 // indirect
+	github.com/gorilla/mux v1.7.4
 	github.com/json-iterator/go v1.1.9 // indirect
+	github.com/onsi/gomega v1.7.0
+	github.com/sclevine/spec v1.4.0
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect

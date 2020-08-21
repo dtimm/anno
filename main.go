@@ -8,7 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dtimm/anno/proxy"
+
 	v1 "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -43,10 +46,7 @@ func main() {
 	}
 }
 
-type fetcher func() (*v1.PodList, error)
-
-func createFetcher(config *rest.Config) (fetcher, error) {
-
+func createFetcher(config *rest.Config) (proxy.Fetcher, error) {
 	c, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
