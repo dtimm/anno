@@ -2,7 +2,10 @@ package proxy_test
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
@@ -20,7 +23,7 @@ func TestProxy(t *testing.T) {
 	tc := setup(basicConf())
 	defer tc.cleanup()
 
-	t.Run("it finds apps that exist", func(t *testing.T) {
+	t.Run("it returns metrics from existing apps", func(t *testing.T) {
 		resp, err := http.Get("http://localhost:8080/metrics/app-id-test")
 
 		if err != nil {
@@ -28,6 +31,15 @@ func TestProxy(t *testing.T) {
 		}
 		if resp.StatusCode != http.StatusOK {
 			t.Fatal(err)
+		}
+
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !strings.Contains(string(b), "test-metric") {
+			t.Fatal("test-metric not found")
 		}
 	})
 
@@ -51,6 +63,7 @@ func setup(c proxy.Config) *testContext {
 	r := mux.NewRouter()
 	r.HandleFunc("/metrics", func(rw http.ResponseWriter, _ *http.Request) {
 		rw.WriteHeader(200)
+		fmt.Fprint(rw, "test-metric")
 	})
 	srv := &http.Server{
 		Addr:    ":8081",

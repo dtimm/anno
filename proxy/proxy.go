@@ -3,8 +3,11 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -19,7 +22,7 @@ type Config struct {
 }
 
 type Proxy interface {
-	Start() error
+	Start()
 	Stop()
 }
 
@@ -36,7 +39,7 @@ type proxy struct {
 	srv   *http.Server
 }
 
-func (p *proxy) Start() error {
+func (p *proxy) Start() {
 	log.Printf("serving anno-proxy on %d...\n", p.port)
 
 	r := mux.NewRouter()
@@ -54,8 +57,6 @@ func (p *proxy) Start() error {
 			log.Println(err)
 		}
 	}()
-
-	return nil
 }
 
 func (p *proxy) Stop() {
@@ -74,10 +75,35 @@ func (p *proxy) serveMetrics(w http.ResponseWriter, r *http.Request) {
 
 	for _, pod := range pods.Items {
 		if pod.GetName() == vars["appID"] {
+			u := getPath(pod.Status.PodIP, pod.GetAnnotations())
+			resp, err := http.Get(u.String())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
 			w.WriteHeader(http.StatusOK)
+			io.Copy(w, resp.Body)
 			return
 		}
 	}
 
 	w.WriteHeader(http.StatusNotFound)
+}
+
+func getPath(ip string, annotations map[string]string) url.URL {
+	u := url.URL{
+		Scheme: "http",
+		Path:   ip,
+	}
+	for k, v := range annotations {
+		if strings.Contains(k, "prometheus.io/port") {
+			u.Host = fmt.Sprintf("%s:%s", ip, v)
+		}
+		if strings.Contains(k, "prometheus.io/path") {
+			u.Path = v
+		}
+	}
+
+	return u
 }

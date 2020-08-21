@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
-	"strings"
 
 	"github.com/dtimm/anno/proxy"
 
@@ -31,19 +30,16 @@ func main() {
 		panic(err)
 	}
 
-	pods, err := f()
-	if err != nil {
-		panic(err)
-	}
+	p := proxy.NewProxy(proxy.Config{
+		Fetcher: f,
+		Port:    8080,
+	})
+	p.Start()
+	defer p.Stop()
 
-	for _, p := range pods.Items {
-		fmt.Printf("%s\t%s\n", p.GetName(), p.Status.PodIP)
-		for k, v := range p.GetAnnotations() {
-			if strings.Contains(k, "prometheus.io/path") {
-				fmt.Printf("\t%s: %s\n", k, v)
-			}
-		}
-	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
 }
 
 func createFetcher(config *rest.Config) (proxy.Fetcher, error) {
