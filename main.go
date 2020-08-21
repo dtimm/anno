@@ -11,13 +11,19 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
 func main() {
-	f, err := createFetcher()
+	config, err := getConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	f, err := createFetcher(config)
 	if err != nil {
 		panic(err)
 	}
@@ -39,22 +45,8 @@ func main() {
 
 type fetcher func() (*v1.PodList, error)
 
-func createFetcher() (fetcher, error) {
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
+func createFetcher(config *rest.Config) (fetcher, error) {
 
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the clientset
 	c, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
@@ -71,4 +63,27 @@ func homeDir() string {
 		return h
 	}
 	return os.Getenv("USERPROFILE") // windows
+}
+
+func getConfig() (*rest.Config, error) {
+	k, err := rest.InClusterConfig()
+	if err == nil {
+		return k, err
+	}
+
+	var kubeconfig *string
+	if home := homeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+	flag.Parse()
+
+	// use the current context in kubeconfig
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
