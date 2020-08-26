@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 docker build -t davidtimm/anno .
 docker push davidtimm/anno
 
