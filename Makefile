@@ -22,7 +22,7 @@ all: build-linux build-windows build-darwin
 
 build-%:
 	echo "Building $* binary tag $(VERSION) in bin/anno-proxy-$*..."
-	GOOS=$* GOARCH=amd64 go build -a -installsuffix nocgo -o bin/metric-proxy-$* -ldflags "-X main.version=$(VERSION)" -mod=readonly .
+	GOOS=$* GOARCH=amd64 go build -a -installsuffix nocgo -o bin/anno-$* -ldflags "-X main.version=$(VERSION)" -mod=readonly .
 
 test:
 	go test ./... -race -count=1
