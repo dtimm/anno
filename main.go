@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -22,7 +23,7 @@ import (
 func main() {
 	config, err := getConfig()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("no kubeconfig available"))
 	}
 
 	f, err := createFetcher(config)

@@ -1,0 +1,26 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anno-proxy
+  namespace: #@ data.values.system_namespace
+  labels:
+    app: anno-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anno-proxy
+  template:
+    metadata:
+      labels:
+        app: anno-proxy
+    spec:
+      serviceAccountName: anno-proxy
+      containers:
+      - name: anno-proxy
+        image: davidtimm/anno
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
