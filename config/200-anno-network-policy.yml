@@ -1,0 +1,15 @@
+#@ load("@ytt:data", "data")
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: anno-proxy
+  namespace: #@ data.values.system_namespace
+spec:
+  policyTypes:
+  - Egress
+  podSelector:
+    matchLabels:
+      app: anno-proxy
+  egress:
+  - {}

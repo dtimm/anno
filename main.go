@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -20,15 +20,20 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
+var version = "dev-build"
+
 func main() {
+	log.Printf("starting anno %s...\n", version)
+	defer log.Println("exiting anno...")
+
 	config, err := getConfig()
 	if err != nil {
-		panic(fmt.Errorf("no kubeconfig available"))
+		log.Fatalf("no kubeconfig available")
 	}
 
 	f, err := createFetcher(config)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	p := proxy.NewProxy(proxy.Config{
@@ -65,6 +70,7 @@ func homeDir() string {
 func getConfig() (*rest.Config, error) {
 	k, err := rest.InClusterConfig()
 	if err == nil {
+		log.Printf("using in cluser config: %s\n", k.Host)
 		return k, err
 	}
 
